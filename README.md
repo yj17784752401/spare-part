@@ -26,3 +26,16 @@ use sparepart;
 
 ### 3. 构建运行
 配置好相关配置后，就可以启动项目，访问  http://localhost:8123/
+
+
+### 效果图
+
+<img width="1040" height="785" alt="image" src="https://github.com/user-attachments/assets/8cfb11b4-317b-45d7-b8b6-50c4c93e655a" />
+
+<img width="731" height="1007" alt="image" src="https://github.com/user-attachments/assets/2ee52c8b-b85c-4770-8767-e1f178754527" />
+
+<img width="787" height="851" alt="image" src="https://github.com/user-attachments/assets/c7c528d5-2ef0-44f8-a02a-ea455e3c1fb4" />
+
+
+
+
