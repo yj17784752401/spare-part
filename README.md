@@ -1,11 +1,11 @@
 # 备件出库与库存预警系统
 
 ## 项目简介
-基于 Spring Boot 2.5 + MyBatis-Plus 实现的备件出库管理，支持库存扣减、自动替代备件选择和库存预警。
+基于 Spring Boot 2.6.13 + MyBatis-Plus 实现的备件出库管理，支持库存扣减、自动替代备件选择和库存预警。
 
 ## 技术栈
 - Java 8
-- Spring Boot 2.5.12
+- Spring Boot 2.6.13
 - MyBatis-Plus 3.4.1
 - MySQL (生产) / H2 (测试)
 - Lombok
