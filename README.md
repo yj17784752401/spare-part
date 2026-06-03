@@ -25,7 +25,7 @@ use sparepart;
 编辑 `application.yml` 中的数据库连接信息。
 
 ### 3. 构建运行
-配置好相关配置后，就可以启动项目，访问  http://localhost:8123/
+配置好相关配置后，就可以启动项目，访问   [点击访问](http://localhost:8123/) 也可以使用swagger进行接口测试  [点击访问](http://localhost:8123/doc.html)
 
 
 ### 效果图
