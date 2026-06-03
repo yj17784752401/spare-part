@@ -1,0 +1,17 @@
+# application-test.yml (用于测试)
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+  h2:
+    console:
+      enabled: true
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true

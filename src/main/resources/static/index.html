@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备件出库系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #444;
+            font-size: 0.9rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            outline: none;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #4a90d9;
+            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #4a90d9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #b0c4de;
+            cursor: not-allowed;
+        }
+
+        .result-panel {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-panel.success {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            color: #2e7d32;
+        }
+
+        .result-panel.error {
+            background: #ffebee;
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+        }
+
+        .result-panel .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .result-panel .label {
+            font-weight: 600;
+        }
+
+        .result-panel .message {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .spinner {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📦 备件出库管理</h1>
+    <p class="subtitle">输入出库信息，系统自动处理替代与预警</p>
+
+    <form id="outboundForm">
+        <div class="form-group">
+            <label for="partId">备件 ID *</label>
+            <input type="number" id="partId" name="partId" placeholder="例如：1001" required>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">出库数量 *</label>
+            <input type="number" id="quantity" name="quantity" placeholder="必须大于 0" min="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="reason">出库原因</label>
+            <textarea id="reason" name="reason" placeholder="如：生产线维修领用（可选）"></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">提交出库</button>
+    </form>
+
+    <div class="spinner" id="spinner">⏳ 处理中，请稍候...</div>
+
+    <div id="resultPanel" class="result-panel">
+        <div class="message" id="resultMessage"></div>
+        <div id="resultDetails"></div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('outboundForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('spinner');
+    const resultPanel = document.getElementById('resultPanel');
+    const resultMessage = document.getElementById('resultMessage');
+    const resultDetails = document.getElementById('resultDetails');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 隐藏之前的结果
+        resultPanel.style.display = 'none';
+        resultPanel.className = 'result-panel';
+
+        // 获取表单数据
+        const partId = parseInt(document.getElementById('partId').value);
+        const quantity = parseInt(document.getElementById('quantity').value);
+        const reason = document.getElementById('reason').value.trim();
+
+        // 前端基础校验
+        if (!partId || !quantity || quantity <= 0) {
+            showError('请输入有效的备件 ID 和出库数量（> 0）');
+            return;
+        }
+
+        // 禁用按钮，显示加载状态
+        submitBtn.disabled = true;
+        spinner.style.display = 'block';
+
+        try {
+            const response = await fetch('/api/v1/outbound', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    partId: partId,
+                    quantity: quantity,
+                    reason: reason || null
+                })
+            });
+
+            const result = await response.json();
+
+            // 根据 HTTP 状态码和业务 code 处理
+            if (response.ok && result.code === 0) {
+                showSuccess(result);
+            } else {
+                // 业务异常或 HTTP 错误
+                showError(result.message || '出库失败，未知错误');
+            }
+        } catch (error) {
+            console.error('请求失败:', error);
+            showError('网络或服务器异常，请检查连接后重试');
+        } finally {
+            submitBtn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    });
+
+    function showSuccess(result) {
+        const data = result.data;
+        resultPanel.className = 'result-panel success';
+        resultMessage.textContent = '✅ ' + result.message;
+
+        // 构建详细信息
+        let detailsHtml = '';
+        detailsHtml += `<div class="detail-row"><span class="label">出库记录 ID：</span><span>${data.outboundId}</span></div>`;
+        detailsHtml += `<div class="detail-row"><span class="label">请求备件：</span><span>${data.substitutedFromName} (ID: ${data.requestPartId})</span></div>`;
+        detailsHtml += `<div class="detail-row"><span class="label">实际出库备件：</span><span>${data.substitutedToName} (ID: ${data.actualOutboundPartId})</span></div>`;
+        detailsHtml += `<div class="detail-row"><span class="label">是否使用替代：</span><span>${data.substituted ? '是' : '否'}</span></div>`;
+        detailsHtml += `<div class="detail-row"><span class="label">出库数量：</span><span>${data.quantity || '--'}</span></div>`;
+        detailsHtml += `<div class="detail-row"><span class="label">最终库存：</span><span>${data.finalStock}</span></div>`;
+        resultDetails.innerHTML = detailsHtml;
+        resultPanel.style.display = 'block';
+    }
+
+    function showError(message) {
+        resultPanel.className = 'result-panel error';
+        resultMessage.textContent = '❌ ' + message;
+        resultDetails.innerHTML = ''; // 清空详情
+        resultPanel.style.display = 'block';
+    }
+</script>
+</body>
+</html>
