@@ -13,11 +13,16 @@
 ## 快速开始
 ### 1. 数据库准备
 执行 `src/main/resources/db/schema.sql` 创建表结构。
+sql里面需要添加
+#创建数据库
+create database if not exists sparepart;
+# 使用数据库
+use sparepart;
+
+然后就可以创建表结构了
 
 ### 2. 修改配置
 编辑 `application.yml` 中的数据库连接信息。
 
 ### 3. 构建运行
-```bash
-mvn clean package -DskipTests
-java -jar target/spare-part-outbound-1.0.0.jar
+配置好相关配置后，就可以启动项目，访问  http://localhost:8123/
